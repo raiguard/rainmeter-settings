@@ -1,8 +1,8 @@
--- ------------------------------------------------------------
+-- --------------------------------------------------------------------------------
 -- DYNAMIC RAINMETER SETTINGS SYSTEM
 -- v1.0.0
 -- By raiguard
--- ------------------------------------------------------------
+-- --------------------------------------------------------------------------------
 -- MIT License
 
 -- Copyright (c) 2018 Caleb Heuer
@@ -24,7 +24,8 @@
 -- LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 -- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 -- SOFTWARE.
--- ------------------------------------------------------------
+-- --------------------------------------------------------------------------------
+-- Documentation: https://github.com/raiguard/rainmeter-settings/blob/master/README.md
 
 debug = true
 
@@ -44,6 +45,8 @@ function Update()
 
 end
 
+-- for use with toggle buttons. Toggles the specified variable between the two
+-- given states, and executes ActionSets as normal.
 function Toggle(variable, offState, onState, settingsPath, configPath, actionSet, ifLogic)
 
 	local value = SKIN:GetVariable(variable)
@@ -77,6 +80,8 @@ function Toggle(variable, offState, onState, settingsPath, configPath, actionSet
 
 end
 
+-- for use with radio buttons. sets the variable to the given input and executes
+-- ActionSets as normal. Functionally identical to Input().
 function Radio(state, variable, settingsPath, configPath, actionSet, ifLogic)
 
 	local settingsPath = SKIN:GetVariable(settingsPath)
@@ -102,6 +107,8 @@ function Radio(state, variable, settingsPath, configPath, actionSet, ifLogic)
 
 end
 
+-- for use with input boxes. sets the variable to the given input and executes
+-- ActionSets as normal. Functionally identical to Radio().
 function Input(input, variable, settingsPath, configPath, actionSet, ifLogic)
 
 	local settingsPath = SKIN:GetVariable(settingsPath)
@@ -127,6 +134,8 @@ function Input(input, variable, settingsPath, configPath, actionSet, ifLogic)
 
 end
 
+-- returns the 'toggleOn' or 'toggleOff' parameters depending on the state of the
+-- given variable
 function GetIcon(value, offState, onState)
 
 	if offState == nil then
@@ -146,8 +155,8 @@ function GetRadioIcon(value, onState)
 
 end
 
--- sets the variable using both !SetVariable and !WriteKeyValue, updating the value
--- both in the settings skin and the primary skin
+-- sets the variable using both !SetVariable and !WriteKeyValue, updating the
+-- value both in the settings skin and the primary skin
 function SetVariable(name, parameter, filePath, configPath)
 
 	SKIN:Bang('!SetVariable', name, parameter)
@@ -167,7 +176,7 @@ function LogHelper(message, type)
 
 end
 
--- updates the toggle buttons for the current skin
+-- updates the toggle buttons, radio buttons, and input boxes
 function UpdateToggles()
 
 	SKIN:Bang('!UpdateMeterGroup', 'ToggleButtons')

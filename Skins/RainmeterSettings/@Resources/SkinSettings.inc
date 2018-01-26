@@ -5,3 +5,4 @@ tempUnits=F
 
 radio1=Foo
 colorBox=255,0,0
+customText=auto
