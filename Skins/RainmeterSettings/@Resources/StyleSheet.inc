@@ -8,8 +8,10 @@ contentMargin=(#bgOffset# + #contentMarginAbs#)
 contentMarginCenter=((#bgWidth# / 2) + #bgOffset#)
 contentMarginRight=((#bgWidth# + #bgOffset#) - #contentMarginAbs# - 1)
 contentWidth=(#bgWidth# - (#contentMarginAbs# * 2))
+rowSpacing=3
 ; Colors
 colorBg=15,15,15
+colorInputBg=40,40,40
 colorMain=240,240,240
 colorDim=150,150,150
 colorAccent=138,210,250
@@ -17,6 +19,8 @@ colorButtonPress=240,30,30
 ; File paths
 skinSettingsPath=#@#SkinSettings.inc
 skinConfigPath=RainmeterSettings\ExampleSkin
+; Character reference variables
+deg=[\176]
 
 [StyleBackground]
 SolidColor=#colorBg#
@@ -41,7 +45,7 @@ FontSize=10
 FontColor=#fontColor#
 Antialias=1
 X=#contentMargin#
-Y=1R
+Y=#rowSpacing#R
 
 [StyleStringRightAlign]
 StringAlign=Right
@@ -71,3 +75,7 @@ X=#contentMargin#
 Y=4R
 DynamicVariables=1
 Group=ToggleButtons
+
+[StyleStringRadioButton]
+X=5R
+Y=1r

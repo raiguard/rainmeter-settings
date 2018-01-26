@@ -1,8 +1,7 @@
 [Variables]
 toggle1=1
-tempUnits=C
-toggle3=1
+toggle2=1
+tempUnits=F
 
-radio1=off
-
-customText=Caleb Heuer
+radio1=Foo
+colorBox=255,0,0

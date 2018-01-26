@@ -49,14 +49,15 @@ function Toggle(variable, offState, onState, settingsPath, configPath, actionSet
 	local value = SKIN:GetVariable(variable)
 	local settingsPath = SKIN:GetVariable(settingsPath)
 	local configPath = SKIN:GetVariable(configPath)
+	local actionSetName = actionSet
 
 	if value == offState then
 		SetVariable(variable, onState, settingsPath, configPath)
-		LogHelper(variable .. ': ' .. onState, 'Debug')
+		LogHelper(variable .. '=' .. onState, 'Debug')
 		value = onState
 	else
 		SetVariable(variable, offState, settingsPath, configPath)
-		LogHelper(variable .. ': ' .. offState, 'Debug')
+		LogHelper(variable .. '=' .. offState, 'Debug')
 		value = offState
 	end
 
@@ -65,11 +66,10 @@ function Toggle(variable, offState, onState, settingsPath, configPath, actionSet
 	else
 		if ifLogic == true then
 			actionSet = SELF:GetOption(actionSet .. value)
-		else
-			actionSet = SELF:GetOption(actionSet)
-			if actionSet == '' then LogHelper('ActionSet for \'' .. variable .. '\' is empty or missing', 'Warning') end
-		end
-
+			actionSetName = actionSetName .. value
+			else actionSet = SELF:GetOption(actionSet) end
+		if actionSet == '' then LogHelper('ActionSet \'' .. actionSetName .. '\' is empty or missing', 'Warning') end
+		LogHelper(actionSetName .. '=' .. actionSet, 'Debug')
 		SKIN:Bang(actionSet)
 	end
 
@@ -77,29 +77,72 @@ function Toggle(variable, offState, onState, settingsPath, configPath, actionSet
 
 end
 
-function GetIcon(value, offState, onState, radio)
+function Radio(state, variable, settingsPath, configPath, actionSet, ifLogic)
+
+	local settingsPath = SKIN:GetVariable(settingsPath)
+	local configPath = SKIN:GetVariable(configPath)
+	local actionSetName = actionSet
+
+	SetVariable(variable, state, settingsPath, configPath)
+	LogHelper(variable .. '=' .. state, 'Debug')	
+
+	if actionSet == nil then
+		SKIN:Bang(defaultAction)
+	else
+		if ifLogic == true then
+			actionSet = SELF:GetOption(actionSet .. state)
+			actionSetName = actionSetName .. state
+			else actionSet = SELF:GetOption(actionSet) end
+		if actionSet == '' then LogHelper('ActionSet \'' .. actionSetName .. '\' is empty or missing', 'Warning') end
+		LogHelper(actionSetName .. '=' .. actionSet, 'Debug')
+		SKIN:Bang(actionSet)
+	end
+
+	UpdateToggles()
+
+end
+
+function Input(input, variable, settingsPath, configPath, actionSet, ifLogic)
+
+	local settingsPath = SKIN:GetVariable(settingsPath)
+	local configPath = SKIN:GetVariable(configPath)
+	local actionSetName = actionSet
+
+	SetVariable(variable, input, settingsPath, configPath)
+	LogHelper(variable .. '=' .. input, 'Debug')
+
+	if actionSet == nil then
+		SKIN:Bang(defaultAction)
+	else
+		if ifLogic == true then
+			actionSet = SELF:GetOption(actionSet .. input)
+			actionSetName = actionSetName .. input
+			else actionSet = SELF:GetOption(actionSet) end
+		if actionSet == '' then LogHelper('ActionSet \'' .. actionSetName .. '\' is empty or missing', 'Warning') end
+		LogHelper(actionSetName .. '=' .. actionSet, 'Debug')
+		SKIN:Bang(actionSet)
+	end
+
+	UpdateToggles()
+
+end
+
+function GetIcon(value, offState, onState)
 
 	if offState == nil then
-		if value == 1 then
-			return toggleOn
-		else
-			return toggleOff
-		end
+		if value == 1 then return toggleOn
+			else return toggleOff end
 	else
-		if radio == nil or radio == false then
-			if value == onState then
-				return toggleOn
-			else
-				return toggleOff
-			end
-		else
-			if value == onState then
-				return radioOn
-			else
-				return radioOff
-			end
-		end
+		if value == onState then return toggleOn
+			else return toggleOff end
 	end
+
+end
+
+function GetRadioIcon(value, onState)
+
+	if value == onState then return radioOn
+		else return radioOff end
 
 end
 
@@ -107,30 +150,27 @@ end
 -- both in the settings skin and the primary skin
 function SetVariable(name, parameter, filePath, configPath)
 
-  SKIN:Bang('!SetVariable', name, parameter)
-  if filePath == nil then SKIN:Bang('!WriteKeyValue', 'Variables', name, parameter) 
-  else SKIN:Bang('!WriteKeyValue', 'Variables', name, parameter, filePath) end
-  if configPath ~= nil then SKIN:Bang('!SetVariable', name, parameter, configPath) end
+	SKIN:Bang('!SetVariable', name, parameter)
+	if filePath == nil then SKIN:Bang('!WriteKeyValue', 'Variables', name, parameter) 
+		else SKIN:Bang('!WriteKeyValue', 'Variables', name, parameter, filePath) end
+	if configPath ~= nil then SKIN:Bang('!SetVariable', name, parameter, configPath) end
 
 end
 
 -- function to make logging messages less complicated
 function LogHelper(message, type)
 
-  if type == nil then type = 'Debug' end
+	if type == nil then type = 'Debug' end
 
-  if debug == true then
-    SKIN:Bang("!Log", message, type)
-  elseif type ~= 'Debug' then
-  	SKIN:Bang("!Log", message, type)
-	end
+	if debug == true then SKIN:Bang("!Log", message, type)
+    elseif type ~= 'Debug' then SKIN:Bang("!Log", message, type) end
 
 end
 
 -- updates the toggle buttons for the current skin
 function UpdateToggles()
 
-  SKIN:Bang('!UpdateMeterGroup', 'ToggleButtons')
-  SKIN:Bang('!Redraw')
+	SKIN:Bang('!UpdateMeterGroup', 'ToggleButtons')
+	SKIN:Bang('!Redraw')
 
 end
