@@ -83,7 +83,7 @@ Y=1r
 [StyleStringInputBox]
 FontFace=Roboto Lt
 SolidColor=#colorInputBg#
-Padding=2,0,2,0
+Padding=2,-1,2,0
 W=(#contentWidth# - 4)
 ClipString=1
 DynamicVariables=1

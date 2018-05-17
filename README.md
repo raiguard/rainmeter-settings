@@ -1,167 +1,189 @@
 # Dynamic Rainmeter Settings System
 A general-use Rainmeter settings system. Includes toggle buttons, radio buttons, and input boxes.
 
-The following is work-in-progress documentation:
+## Introduction
+Rainmeter skins are meant to be tinkered with - it is the central purpose and theme of Rainmeter itself. People are encouraged to delve deep into the code and figure out how things work, and modify them to suit their needs. However, most people are not willing to do this, and some just don't have the knowledge or patience to learn.
 
-## The Script Measure
-Create a script measure in the skin you are using for the settings. This measure serves not only as the invocation of the settings script, but as the location to place all of the action bangs that will need to be invoked when a setting is changed. It also contains a few common settings that will be needed for the system to function.
+Most skin authors will include some sort of "settings" skin, with a UI to allow the users to change settings without needing to so much as glance at the code. However, creating an in-depth and engaging settings skin can be complicated and time-consuming, and when the settings themselves get complicated, it it difficult to create a good interface for them.
+
+That is where this system comes in. The dynamic Rainmeter settings system is meant to ease the process of creating complex settings skins for use by end-users of a suite. It allows skin authors to create more expressive and more interactive user interfaces for changing these settings. It removes the need for authors to manually code every settings interaction, instead only needing to provide some arguments for a function and specify what bangs need to be executed along with the setting.
+
+## Usage
+These instructions assume that you have intermediate knowledge of how to create Rainmeter skins. The [Rainmeter documentation](https://docs.rainmeter.net) includes several tutorials on the basics of skin editing.
+
+### The Script Measure
+Copy the Settings.lua script into your suite and create a script measure for it. There are several options you will need to add to the measure beyond the usual:
+
+`SettingsPath`: Path to the file where the settings variables are contained. Will default to the current skin.  
+`ConfigPath`: The config of the skin where the settings will take effect. Will default to the current config.  
+`ToggleOn`: The text or image path for toggle buttons in the "On" state.  
+`ToggleOff`: The text or image path for toggle buttons in the "Off" state.  
+`RadioOn`: The text or image path for radio buttons in the "On" state.  
+`RadioOff`: The text or image path for radio buttons in the "Off" state.  
+`DefaultAction` (required): The default ActionSet to use if one is not specified or is missing.  
+
+#### ActionSets
+`ActionSets` are collections of bangs to execute when that option is changed. The recommended naming syntax is `(variable name)Action`. For example, if I'm changing the `#showCpuName#` variable, the ActionSet name would be `CpuNameAction`. ActionSets are defined in the script measure as any other option would be.
+
+The purpose of ActionSets is to avoid refreshing the skin. Refreshing a skin is the single most resource-intensive activity in Rainmeter, and in very large and complicated skins, can hang Rainmeter for several moments. As a rule of thumb, you should avoid refreshing a skin as much as humanly possible. ActionSets allow you to use `!SetOption` bangs to invoke the changes of the setting you changed, without needing to use DynamicVariables and without refreshing the skin.
+
+When using ActionSets, keep in mind that any variables you use will automatically be dynamic. So if you use the `#showCpuName#` variable in the `CpuNameAction` ActionSet, the variable's value will be the new state of the variable after it was changed.
+
+#### IfLogic
+`IfLogic` is an optional behavior that you can use with `ActionSets` to invoke different sets of bangs depending on the new state of the variable that was changed. For ActionSets using IfLogic, use the same naming syntax with the new state of the variable added onto the end. For example, instead of `CpuNameAction`, you would use `CpuNameAction0` and `CpuNameAction1`.
+
+#### Implementation
+Here is an example of what the script measure may look like when populated with options:
+
 ```
 [MeasureSettingsScript]
 Measure=Script
-Script=#@#Scripts\Settings.lua
+ScriptFile=#@#Scripts\Settings.lua
+SettingsPath=#skinSettingsPath#
+ConfigPath=#skinConfigPath#
 ToggleOn=[\x5a]
 ToggleOff=[\x56]
 RadioOn=[\x5c]
 RadioOff=[\x5b]
 DefaultAction=[!Update "#skinConfigPath#"][!Redraw "#skinConfigPath#"]
-ShowTextAction=[!SetOption MeterText Hidden "(1 - (#showText#))" "#skinConfigPath#"][!UpdateMeter MeterText "#skinConfigPath#"][!Redraw "#skinConfigPath#"]
+CpuNameAction=[!SetOption CpuNameString Hidden "(#showCPuName# = 0)" "#skinConfigPath#"][!UpdateMeter CpuNameString "#skinConfigPath#"][!Redraw "#skinConfigPath#"]
 ```
-*toggleOn* and *toggleOff* define the image names or strings that correspond to a toggle button's state. The same is true of radio buttons. All of the included examples use strings with character reference variables, but you can change these settings to your liking.
 
-### ActionSets
-The majority of Rainmeter skin authors will simply refresh the skin when they change a variable. However, for large complex skins (such as the skins in ModernGadgets), this can take up tons of system resources and lag all other Rainmeter skins. Thus, we want to be able to change settings and update the meters without refreshing the entire skin. You could add `DynamicVariables` to every meter that will be affected by the change, but that will cause a large performance drop in complex skins.
+### Skin path variables
+Most of the time, you will only need to specify the skin config and settings path in the script measure. However, if you have options for multiple skins / settings files in one settings skin, you will need to override the global _SettingsPath_ and _ConfigPath_ options that you set in the script measure.
 
-Because of this, you will need to execute a series of custom bangs whenever you change a setting, to avoid refreshing and using DynamicVariables. These series of bangs are called *ActionSets*. Every setting you change should usually include an ActionSet, unless the meters being updated are dynamic. If you do not include an ActionSet, the script will update and redraw the entire skin (which is usually fine, unless the skin being updated is very large and complicated).
+The `Toggle()` and `Set()` functions have optional arguments that allow for this. However, unlike simply specifying the path in the script measure, if you do the same in the function arguments, LUA will get confused and throw an error. This is because Windows uses backslashes `\` in file paths, and in LUA the backslash `\` is an escape character. Rainmeter will account for this most of the time, but in this specific circumstance, you must manually escape the file paths with double backslashes `\\`.
 
-Every settings function has an *actionSet* argument. Set it to the name of the ActionSet you wish to execute when that setting is changed. If you do not include an ActionSet argument, the script will automatically check for an ActionSet with the name `(variable name)Action`. If that doesn't exist, it will use the `DefaultAction` ActionSet. If *that* does not exist, it will throw an error.
-
-#### IfLogic
-For more complex settings, it is possible that you will want to execute different sets of actions depending on the new state of the variable. The script allows this by setting the *ifLogic* argument in a settings function to true. If set to true, the script will check for an ActionSet that is appended by the new state of the variable that was changed. For example:
+Here is an example of what needs to be done:
 ```
-Column1ActionOff=[!SetOptionGroup ColumnMeters Hidden "1" "#skinConfigPath"][!UpdateMeterGroup ColumnMeters "#skinConfigPath#"][!Redraw "#skinConfigPath#"]
-Column1ActionTemps=[!SetOptionGroup Voltages Hidden "1" "#skinConfigPath"][!SetOptionGroup Temps Hidden "0" "#skinConfigPath"][!UpdateMeterGroup ColumnMeters "#skinConfigPath#"][!Redraw "#skinConfigPath#"]
-Column1ActionVoltages=[!SetOptionGroup Temps Hidden "1" "#skinConfigPath#"][!SetOptionGroup Voltages Hidden "0" "#skinConfigPath#"][!UpdateMeterGroup ColumnMeters "#skinConfigPath#"][!Redraw "#skinConfigPath#"]
-```
-This example shows one potential usecase for the ifLogic functionality. It is expected that ifLogic will be used for radio buttons, but there may be instances when it should be used for toggles or input boxes as well.
+[MeasureSkinSettingsPath]
+Measure=String
+String=#@#SkinSettings.inc
+Substitute="\":"\\"
 
-## Standard Toggle Button
-Standard toggle buttons are the most commonly used, and the simplest, implementation of the settings system. Standard toggles will toggle the given variable between 0 and 1.
-
-### Implementation Meters
+[MeasureSkinConfig]
+Measure=String
+String=RainmeterSettings\ExampleSkin
+Substitute="\":"\\"
 ```
-[MeterShowTextButton]
+This measure will replace the backslashes `\` in the paths with double backslashes `\\`, allowing the paths to be used in LUA without conflicts. When using the global overrides in a script argument, use these measures as sections variables.
+
+`[!CommandMeasure MeasureSettingsScript "Set('exampleRadio1', 'on', 'ExampleRadio1Action', false, '[MeasureSkinSettingsPath]', '[MeasureSkinConfig]')"]`
+
+### GetIcon() function
+The Settings.lua script includes the `GetIcon(variable, onState, offState)` function. This function is used through inline LUA on the button meter.
+
+`GetIcon(value, onState, offState)`
+*value* (string) - The value of the variable that the button represents
+*onState* (string) - The variable value which the button will consider the _on_ state
+*offState* (string) - The variable value which the button will consider the _off_ state
+
+There are several ways in which this can be used:  
+- If you are using a toggle button that is toggling between 0 and 1, you can simply provide the variable value as a number, without needing to supply _onState_ and _offState_ (e.g. `GetIcon([#exampleValue1])`)
+- For radio buttons, only provide the first two values (e.g. `GetIcon('[#exampleRadio1]', 'on')`)
+
+### Toggle Button
+[TODO: Radio button image]
+A toggle button is the simplest way to change an option. When the button is pressed, it toggles the value of the given variable between two given states.
+
+#### Implementation
+```
+[MeterCpuNameToggleButton]
 Meter=String
-MeterStyle=StyleString | StyleStringToggleButton
-Text=[&MeasureSettingsScript:GetIconStandard(#showText#)]
-LeftMouseUpAction=[!CommandMeasure MeasureSettingsScript ¨Toggle('showText', '#cpuSettingsPath#', '#cpuMeterConfig#', 'ShowTextAction')"]
-
-[MeterShowTextLabel]
-Meter=String
-MeterStyle=StyleString | StyleStringToggleLabel
-Text="Show Text"
+FontFace=Elegant Icons
+FontSize=10
+FontColor=128,210,255
+X=5
+Y=2R
+Antialias=1
+Text=[&MeasureSettingsScript:GetIcon([#showCpuName])]
+LeftMouseUpAction=[!CommandMeasure MeasureSettingsScript "Toggle('showCpuName', '1', '0', 'CpuNameAction')"]
+DynamicVariables=1
+Group=ToggleButtons
 ```
+(NOTE: The above example is a string meter using character reference variables, but you could also use image meters if desired.)
 
-### Arguments
-`Toggle(variable, settingsPath, configPath, actionSet, ifLogic)`
+The following are required options on a toggle button meter:
+- `DynamicVariables=1`
+- `Group=ToggleButtons`
+
+The rest of the options are able to be changed as desired.
+
+#### Script function
+`Toggle(variable, onState, offState, settingsPath, configPath, actionSet, ifLogic)`
 *variable* - The variable you wish to toggle
-*settingsPath* - The path to the file that the variable is contained in
-*configPath* - The config of the skin that the setting will affect
+*onState* - The value of the 'on' state of the variable
+*offState* - The value of the 'off' state of the variable
 *actionSet* - The name of the action set to execute
 *ifLogic* - If set to true, will use the script's ifLogic functionality
+*settingsPath* - Overrides the `SettingsPath` option in the script measure
+*configPath* - Overrides the `ConfigPath` option in the script measure
 
-## Custom Toggle Button
-Custom toggle buttons behave similarly to standard toggle buttons, but allow you to toggle between two custom values, rather than just 1 and 0. Aside from that change, they are exactly similar to standard toggles.
+#### Other notes
+- The toggled values do not necessarily need to be 0 and 1. They can be any two strings or numbers that you desire
+- Even if you use numbers, the offState and onState arguments must be passed as strings
+- The variable argument takes in the name of the variable as a string, not the value of the variable itself
 
-### Implementation Meters
+### Radio Button
+[TODO: Radio button image]
+Radio buttons allow a variable to be changed between multiple predefined values. Each button will set the variable to its given value. Multiple radio buttons can be used with the same variable to enable having more than two states for one variable.
+
+#### Implementation
 ```
-[MeterTempUnitsButton]
+[MeterModeRadioButton]
 Meter=String
-MeterStyle=StyleString | StyleStringToggleButton
-Text=[&MeasureSettingsScript:GetIcon('C', 'F')]
-LeftMouseUpAction=[!CommandMeasure MeasureSettingsScript ¨CustomToggle('C', 'F', #tempUnits#, '#skinSettingsPath#', '#skinConfigPath#', 'TempUnitsAction')"]
-
-[MeterTempUnitsLabel]
-Meter=String
-MeterStyle=StyleString | StyleStringToggleLabel
-Text="Use Fahrenheit temperatures"
+FontFace=Elegant Icons
+FontSize=10
+FontColor=128,210,255
+X=5
+Y=2R
+Antialias=1
+Text=[&MeasureSettingsScript:GetIcon('[#mode]', 'off')]
+LeftMouseUpAction=[!CommandMeasure MeasureSettingsScript "Set('mode', 'off', 'ModeAction', true)"]
+DynamicVariables=1
+Group=ToggleButtons
 ```
+The `Set()` function is used to _set_ the variable to the given value, rather than toggling between just two values. As with toggle buttons, you must use `DynamicVariables=1` on the implementation meter.
 
-### Arguments
-`CustomToggle(state0, state1, variable, filePath, configPath, actionSet, ifLogic)`
-*state0* - The "off" setting
-*state1* - The "on" setting
-*variable* - The variable to be toggled
-*settingsPath* - The path to the file that the variable is contained in
-*configPath* - The config of the skin that the setting will affect
+#### Script function
+`Set(variable, state, actionSet, ifLogic, settingsPath, configPath)`
+*variable* - The variable you wish to toggle
+*state* - The state that the button will set the variable to
 *actionSet* - The name of the action set to execute
 *ifLogic* - If set to true, will use the script's ifLogic functionality
+*settingsPath* - Overrides the `SettingsPath` option in the script measure
+*configPath* - Overrides the `ConfigPath` option in the script measure
 
-## Standard Radio Button
-Radio buttons change a setting to a set value when clicked, and are off if the value is anything different. They are meant to be used in series, providing several options for one variable.
+#### Other notes
+- The `state` argument must be a string (but can be a number inside a string)
+- IfLogic is most likely to be used with a set of radio buttons
 
-### Implementation Meters
-```
-[MeterColumn1OffButton]
-Meter=String
-MeterStyle=StyleString | StyleStringRadioButton
-Text=[&MeasureSettingsScript:GetRadioIcon('Off')]
-LeftMouseUpAction=[!CommandMeasure MeasureSettingsScript "Radio('Off', 'Column1Contents', '#skinSettingsPath#', '#skinConfigPath#', 'Column1Action', true)]
+### Input Box
+Input Boxes are a method with which to set a variable to any value the user desires. Input boxes differ fundamentally from toggle and radio buttons in that the script function is not invoked in the meter itself - it is invoked from the InputText measure. Input boxes use the `Set()` function, the same as radio buttons.
 
-[MeterColumn1OffLabel]
-Meter=String
-MeterStyle=StyleString | StyleStringRadioLabel
-Text="Off"
+Input boxes require knowledge of how to use the [InputText plugin](https://docs.rainmeter.net/manual-beta/plugins/inputtext). Click the link to view the plugin documentation.
 
-[MeterColumn1TempsButton]
-Meter=String
-MeterStyle=StyleString | StyleStringRadioButton
-Text=[&MeasureSettingsScript:GetRadioIcon('Temps')]
-LeftMouseUpAction=[!CommandMeasure MeasureSettingsScript "Radio('Temps', 'Column1Contents', '#skinSettingsPath#', '#skinConfigPath#', 'Column1Action', true)]
-
-[MeterColumn1TempsLabel]
-Meter=String
-MeterStyle=StyleString | StyleStringRadioLabel
-Text="Temperatures"
-
-[MeterColumn1VoltagesButton]
-Meter=String
-MeterStyle=StyleString | StyleStringRadioButton
-Text=[&MeasureSettingsScript:GetRadioIcon('Voltages')]
-LeftMouseUpAction=[!CommandMeasure MeasureSettingsScript "Radio('Voltages', 'Column1Contents', '#skinSettingsPath#', '#skinConfigPath#', 'Column1Action', true)]
-
-[MeterColumn1VoltagesLabel]
-Meter=String
-MeterStyle=StyleString | StyleStringRadioLabel
-Text="Voltages"
-```
-
-### Arguments
-`Radio(state, variable, filePath, configPath, actionSet, ifLogic)`
-*state* - The value that the radio button will set the variable to
-*variable* - The variable to be changed
-*settingsPath* - The path to the file that the variable is contained in
-*configPath* - The config of the skin that the setting will affect
-*actionSet* - The name of the action set to execute
-*ifLogic* - If set to true, will use the script's ifLogic functionality
-
-## Input Box
-Input boxes allow the user to change a variable to any value they wish. Because of the nature of the InputText plugin, there are a few key differences between how input boxes are implemented versus the other setting types.
-
-Using input boxes requires knowledge of how to use the [InputText plugin](https://docs.rainmeter.net/manual/plugins/inputtext/). Click the link to read the documentation for that plugin.
-
-### Implementation Meters
+#### Implementation
 ```
 [MeasureInputText]
-(inputtext options)
-Command1=[!CommandMeasure MeasureSettingsScript "Input('$UserInput$', 'CustomText', '#skinSettingsPath#', '#skinConfigPath#', 'CustomTextAction', true)"]
+Measure=Plugin
+Plugin=InputText
+(other inputtext options here)
+Command1=[!CommandMeasure MeasureSettingsScript "Set('customText', '$UserInput$', 'CustomTextAction')"] Default="#customText#" X=[MeterCustomTextInputBox:X] Y=[MeterCustomTextInputBox:Y] W=[MeterCustomTextInputBox:W] H=[MeterCustomTextInputBox:H]
 
-[MeterCustomTextLabel]
+[MeterCustomTextInputBox]
 Meter=String
-MeterStyle=StyleString | StyleStringInputLabel
-Text="Custom Text"
-
-[MeterCustomTextInput]
-Meter=String
-MeterStyle=StyleString | StyleStringInputBox
+FontFace=Roboto Lt
+FontColor=250,250,250
+FontSize=10
+SolidColor=25,25,25
+X=5
+Y=3R
+W=80
+H=16
+Padding=2,0,2,0
 Text="#customText#"
 LeftMouseUpAction=[!CommandMeasure MeasureInputText "Executebatch 1"]
+DynamicVariables=1
+Group=ToggleButtons
 ```
-
-### Arguments
-`Input(input, variable, settingsPath, configPath, actionSet, ifLogic)`
-*input* - The input from the input box. This will always be `'$UserInput$'`
-*variable* - The variable to be changed
-*settingsPath* - The path to the file that the variable is contained in
-*configPath* - The config of the skin that the setting will affect
-*actionSet* - The name of the action set to execute
-*ifLogic* - If set to true, will use the script's ifLogic functionality

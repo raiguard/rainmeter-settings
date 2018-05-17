@@ -57,11 +57,11 @@ function Toggle(variable, onState, offState, actionSet, ifLogic, oSettingsPath, 
 	if oConfigPath ~= nil then lConfigPath = oSettingsPath end
 
 	if value == offState then
-		SetVariable(variable, onState, settingsPath, configPath)
+		SetVariable(variable, onState, lSettingsPath, lConfigPath)
 		LogHelper(variable .. '=' .. onState, 'Debug')
 		value = onState
 	else
-		SetVariable(variable, offState, settingsPath, configPath)
+		SetVariable(variable, offState, lSettingsPath, lConfigPath)
 		LogHelper(variable .. '=' .. offState, 'Debug')
 		value = offState
 	end
@@ -170,9 +170,9 @@ end
 function CustomText(input)
 
 	if input == '' then
-		Input('auto', 'customText', skinSettingsPath, skinConfigPath, 'CustomTextActionAuto')
+		Set('customText', 'auto', 'CustomTextActionAuto')
 	else
-		Input(input, 'customText', skinSettingsPath, skinConfigPath, 'CustomTextAction')
+		Set('customText', input, 'CustomTextAction')
 	end
 
 end
