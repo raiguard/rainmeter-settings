@@ -74,7 +74,7 @@ FontSize=12
 X=#contentMargin#
 Y=4R
 DynamicVariables=1
-Group=ToggleButtons
+Group=Settings
 
 [StyleStringRadioButton]
 X=5R
@@ -87,4 +87,4 @@ Padding=2,0,2,0
 W=(#contentWidth# - 4)
 ClipString=1
 DynamicVariables=1
-Group=ToggleButtons
+Group=Settings

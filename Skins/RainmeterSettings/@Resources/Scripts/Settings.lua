@@ -27,10 +27,13 @@
 -- --------------------------------------------------------------------------------
 -- Documentation: https://github.com/raiguard/rainmeter-settings/blob/master/README.md
 
-debug = true
+debug = false
 
 function Initialize()
 
+	meterUpdateGroup = SELF:GetOption('MeterUpdateGroup', 'Settings')
+	settingsPath = SELF:GetOption('SettingsPath', SKIN:GetVariable('CURRENTPATH'))
+	configPath = SELF:GetOption('ConfigPath', SKIN:GetVariable('CURRENTPATH'))
 	toggleOn = SELF:GetOption('ToggleOn')
 	toggleOff = SELF:GetOption('ToggleOff')
 	radioOn = SELF:GetOption('RadioOn')
@@ -39,18 +42,19 @@ function Initialize()
 
 end
 
-function Update()
-
-
-
-end
+function Update() end
 
 -- for use with toggle buttons. Toggles the specified variable between the two
--- given states, and executes ActionSets as normal.
-function Toggle(variable, offState, onState, settingsPath, configPath, actionSet, ifLogic)
+-- given states
+function Toggle(variable, onState, offState, actionSet, ifLogic, oSettingsPath, oConfigPath)
 
 	local value = SKIN:GetVariable(variable)
 	local actionSetName = actionSet
+
+	local lSettingsPath = settingsPath
+	local lConfigPath = configPath
+	if oSettingsPath ~= nil then lSettingsPath = oSettingsPath end
+	if oConfigPath ~= nil then lConfigPath = oSettingsPath end
 
 	if value == offState then
 		SetVariable(variable, onState, settingsPath, configPath)
@@ -61,6 +65,8 @@ function Toggle(variable, offState, onState, settingsPath, configPath, actionSet
 		LogHelper(variable .. '=' .. offState, 'Debug')
 		value = offState
 	end
+
+	UpdateMeters()
 
 	if actionSet == nil then
 		SKIN:Bang(defaultAction)
@@ -74,43 +80,22 @@ function Toggle(variable, offState, onState, settingsPath, configPath, actionSet
 		SKIN:Bang(actionSet)
 	end
 
-	UpdateToggles()
-
 end
 
--- for use with radio buttons. sets the variable to the given input and executes
--- ActionSets as normal. Functionally identical to Input().
-function Radio(state, variable, settingsPath, configPath, actionSet, ifLogic)
+-- sets the specified variable to the given input. For use with radio buttons
+-- and input boxes.
+function Set(variable, input, actionSet, ifLogic, oSettingsPath, oConfigPath)
 
 	local actionSetName = actionSet
 
-	SetVariable(variable, state, settingsPath, configPath)
-	LogHelper(variable .. '=' .. state, 'Debug')	
+	local lSettingsPath = settingsPath
+	local lConfigPath = configPath
+	if oSettingsPath ~= nil then lSettingsPath = oSettingsPath end
+	if oConfigPath ~= nil then lConfigPath = oSettingsPath end
 
-	if actionSet == nil then
-		SKIN:Bang(defaultAction)
-	else
-		if ifLogic == true then
-			actionSet = SELF:GetOption(actionSet .. state)
-			actionSetName = actionSetName .. state
-			else actionSet = SELF:GetOption(actionSet) end
-		if actionSet == '' then LogHelper('ActionSet \'' .. actionSetName .. '\' is empty or missing', 'Warning') end
-		LogHelper(actionSetName .. '=' .. actionSet, 'Debug')
-		SKIN:Bang(actionSet)
-	end
-
-	UpdateToggles()
-
-end
-
--- for use with input boxes. sets the variable to the given input and executes
--- ActionSets as normal. Functionally identical to Radio().
-function Input(input, variable, settingsPath, configPath, actionSet, ifLogic)
-
-	local actionSetName = actionSet
-
-	SetVariable(variable, input, settingsPath, configPath)
-	LogHelper(variable .. '=' .. input, 'Debug')
+	SetVariable(variable, input, lSettingsPath, lConfigPath)
+	LogHelper(variable .. '=' .. input, 'Debug')	
+	UpdateMeters()
 
 	if actionSet == nil then
 		SKIN:Bang(defaultAction)
@@ -124,30 +109,24 @@ function Input(input, variable, settingsPath, configPath, actionSet, ifLogic)
 		SKIN:Bang(actionSet)
 	end
 
-	UpdateToggles()
-
 end
 
 -- returns the 'toggleOn' or 'toggleOff' parameters depending on the state of the
 -- given variable
-function GetIcon(value, offState, onState)
+function GetIcon(value, onState, offState)
 
 	if offState == nil then
-		if value == 1 then return toggleOn
-			else return toggleOff end
+		if onState == nil then
+			if value == 1 then return toggleOn
+				else return toggleOff end
+		else
+			if value == onState then return radioOn
+				else return radioOff end
+		end
 	else
 		if value == onState then return toggleOn
 			else return toggleOff end
 	end
-
-end
-
--- returns the 'radioOn' or 'radioOff' parameters depending on the state of the
--- given variable
-function GetRadioIcon(value, onState)
-
-	if value == onState then return radioOn
-		else return radioOff end
 
 end
 
@@ -173,9 +152,27 @@ function LogHelper(message, type)
 end
 
 -- updates the toggle buttons, radio buttons, and input boxes
-function UpdateToggles()
+function UpdateMeters()
 
-	SKIN:Bang('!UpdateMeterGroup', 'ToggleButtons')
+	SKIN:Bang('!UpdateMeterGroup', meterUpdateGroup)
 	SKIN:Bang('!Redraw')
+
+end
+
+-- --------------------------------------------------------------------------------
+-- CUSTOM LUA ACTIONS
+--
+-- Everything below this point is not usually included with the script, and are
+-- functions specifically designed for settings in this suite. If copying this file
+-- for use in other suites, do not include this section.
+-- --------------------------------------------------------------------------------
+
+function CustomText(input)
+
+	if input == '' then
+		Input('auto', 'customText', skinSettingsPath, skinConfigPath, 'CustomTextActionAuto')
+	else
+		Input(input, 'customText', skinSettingsPath, skinConfigPath, 'CustomTextAction')
+	end
 
 end
