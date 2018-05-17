@@ -33,7 +33,7 @@ function Initialize()
 
 	meterUpdateGroup = SELF:GetOption('MeterUpdateGroup', 'Settings')
 	settingsPath = SELF:GetOption('SettingsPath', SKIN:GetVariable('CURRENTPATH'))
-	configPath = SELF:GetOption('ConfigPath', SKIN:GetVariable('CURRENTPATH'))
+	configPath = SELF:GetOption('ConfigPath', SKIN:GetVariable('CURRENTCONFIGPATH'))
 	toggleOn = SELF:GetOption('ToggleOn')
 	toggleOff = SELF:GetOption('ToggleOff')
 	radioOn = SELF:GetOption('RadioOn')
