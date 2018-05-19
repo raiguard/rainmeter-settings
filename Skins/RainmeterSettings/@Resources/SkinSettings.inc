@@ -1,7 +1,7 @@
 [Variables]
-toggle1=0
-toggle2=0
-tempUnits=C
+toggle1=1
+toggle2=1
+tempUnits=F
 
 radio1=Foo
 colorBox=255,0,0
