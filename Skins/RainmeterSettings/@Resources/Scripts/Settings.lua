@@ -49,7 +49,6 @@ function Update() end
 function Toggle(variable, onState, offState, actionSet, ifLogic, oSettingsPath, oConfigPath)
 
 	local value = SKIN:GetVariable(variable)
-	local actionSetName = actionSet
 
 	local lSettingsPath = settingsPath
 	local lConfigPath = configPath
@@ -67,26 +66,13 @@ function Toggle(variable, onState, offState, actionSet, ifLogic, oSettingsPath, 
 	end
 
 	UpdateMeters()
-
-	if actionSet == nil then
-		SKIN:Bang(defaultAction)
-	else
-		if ifLogic == true then
-			actionSet = SELF:GetOption(actionSet .. value)
-			actionSetName = actionSetName .. value
-			else actionSet = SELF:GetOption(actionSet) end
-		if actionSet == '' then LogHelper('ActionSet \'' .. actionSetName .. '\' is empty or missing', 'Warning') end
-		LogHelper(actionSetName .. '=' .. actionSet, 'Debug')
-		SKIN:Bang(actionSet)
-	end
+	ActionSet(actionSet, ifLogic, value)
 
 end
 
 -- sets the specified variable to the given input. For use with radio buttons
 -- and input boxes.
 function Set(variable, input, actionSet, ifLogic, oSettingsPath, oConfigPath)
-
-	local actionSetName = actionSet
 
 	local lSettingsPath = settingsPath
 	local lConfigPath = configPath
@@ -96,18 +82,7 @@ function Set(variable, input, actionSet, ifLogic, oSettingsPath, oConfigPath)
 	SetVariable(variable, input, lSettingsPath, lConfigPath)
 	LogHelper(variable .. '=' .. input, 'Debug')	
 	UpdateMeters()
-
-	if actionSet == nil then
-		SKIN:Bang(defaultAction)
-	else
-		if ifLogic == true then
-			actionSet = SELF:GetOption(actionSet .. input)
-			actionSetName = actionSetName .. input
-			else actionSet = SELF:GetOption(actionSet) end
-		if actionSet == '' then LogHelper('ActionSet \'' .. actionSetName .. '\' is empty or missing', 'Warning') end
-		LogHelper(actionSetName .. '=' .. actionSet, 'Debug')
-		SKIN:Bang(actionSet)
-	end
+	ActionSet(actionSet, ifLogic, input)
 
 end
 
@@ -156,6 +131,24 @@ function UpdateMeters()
 
 	SKIN:Bang('!UpdateMeterGroup', meterUpdateGroup)
 	SKIN:Bang('!Redraw')
+
+end
+
+function ActionSet(actionSet, ifLogic, input)
+
+	local actionSetName = actionSet
+
+	if actionSet == nil then
+		SKIN:Bang(defaultAction)
+	else
+		if ifLogic == true then
+			actionSetName = actionSet .. input
+			actionSet = SELF:GetOption(actionSet .. input)
+			else actionSet = SELF:GetOption(actionSet) end
+		if actionSet == '' then LogHelper('ActionSet \'' .. actionSetName .. '\' is empty or missing', 'Warning') end
+		LogHelper(actionSetName .. '=' .. actionSet, 'Debug')
+		SKIN:Bang(actionSet)
+	end
 
 end
 
