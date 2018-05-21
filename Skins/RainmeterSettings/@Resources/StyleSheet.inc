@@ -15,7 +15,7 @@ colorInputBg=40,40,40
 colorMain=240,240,240
 colorDim=150,150,150
 colorAccent=138,210,250
-colorButtonPress=240,30,30
+colorButtonPress=200,70,70
 ; File paths
 skinSettingsPath=#@#SkinSettings.inc
 skinConfigPath=RainmeterSettings\ExampleSkin
@@ -75,6 +75,8 @@ X=#contentMargin#
 Y=4R
 DynamicVariables=1
 Group=Settings
+MouseOverAction=[!SetOption #CURRENTSECTION# FontColor "#colorButtonPress#"][!UpdateMeter #CURRENTSECTION#][!Redraw]
+MouseLeaveAction=[!SetOption #CURRENTSECTION# FontColor "#colorAccent#"][!UpdateMeter #CURRENTSECTION#][!Redraw]
 
 [StyleStringRadioButton]
 X=5R
