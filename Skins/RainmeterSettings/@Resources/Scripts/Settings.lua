@@ -27,7 +27,7 @@
 -- --------------------------------------------------------------------------------
 -- Documentation: https://github.com/raiguard/rainmeter-settings/blob/master/README.md
 
-debug = false
+debug = true
 
 function Initialize()
 
@@ -49,19 +49,16 @@ function Update() end
 function Toggle(variable, onState, offState, actionSet, ifLogic, oSettingsPath, oConfigPath)
 
 	local value = SKIN:GetVariable(variable)
-
-	local lSettingsPath = settingsPath
-	local lConfigPath = configPath
-	if oSettingsPath ~= nil then lSettingsPath = oSettingsPath end
-	if oConfigPath ~= nil then lConfigPath = oSettingsPath end
+	local lSettingsPath = oSettingsPath or settingsPath
+	local lConfigPath = oConfigPath or configPath
 
 	if value == offState then
 		SetVariable(variable, onState, lSettingsPath, lConfigPath)
-		LogHelper(variable .. '=' .. onState, 'Debug')
+		RmLog(variable .. '=' .. onState, 'Debug')
 		value = onState
 	else
 		SetVariable(variable, offState, lSettingsPath, lConfigPath)
-		LogHelper(variable .. '=' .. offState, 'Debug')
+		RmLog(variable .. '=' .. offState, 'Debug')
 		value = offState
 	end
 
@@ -74,15 +71,53 @@ end
 -- and input boxes.
 function Set(variable, input, actionSet, ifLogic, oSettingsPath, oConfigPath)
 
-	local lSettingsPath = settingsPath
-	local lConfigPath = configPath
-	if oSettingsPath ~= nil then lSettingsPath = oSettingsPath end
-	if oConfigPath ~= nil then lConfigPath = oSettingsPath end
+	local lSettingsPath = oSettingsPath or settingsPath
+	local lConfigPath = oConfigPath or configPath
 
 	SetVariable(variable, input, lSettingsPath, lConfigPath)
-	LogHelper(variable .. '=' .. input, 'Debug')	
+	RmLog(variable .. '=' .. input, 'Debug')	
 	UpdateMeters()
 	ActionSet(actionSet, ifLogic, input)
+
+end
+
+function Switch(data, actionSet, ifLogic, oSettingsPath, oConfigPath)
+
+	local lSettingsPath = oSettingsPath or settingsPath
+	local lConfigPath = oConfigPath or configPath
+
+	for k,v in pairs(data) do
+		local cValue = SKIN:GetVariable(k)
+		if type(v) == 'table' then
+			for k1, v1 in pairs(v) do
+				if v1 == cValue then
+					RmLog(k .. ': this is it!')
+				else
+					RmLog(k .. ': this is definitely not it!')
+				end
+			end
+		else
+			v = tostring(v)
+		end
+	end
+
+end
+
+function ActionSet(actionSet, ifLogic, input)
+
+	local actionSetName = actionSet
+
+	if actionSet == nil then
+		SKIN:Bang(defaultAction)
+	else
+		if ifLogic == true then
+			actionSetName = actionSet .. input
+			actionSet = SELF:GetOption(actionSet .. input)
+			else actionSet = SELF:GetOption(actionSet) end
+		if actionSet == '' then RmLog('ActionSet \'' .. actionSetName .. '\' is empty or missing', 'Warning') end
+		RmLog(actionSetName .. '=' .. actionSet)
+		SKIN:Bang(actionSet)
+	end
 
 end
 
@@ -117,7 +152,7 @@ function SetVariable(name, parameter, filePath, configPath)
 end
 
 -- function to make logging messages less complicated
-function LogHelper(message, type)
+function RmLog(message, type)
 
 	if type == nil then type = 'Debug' end
 
@@ -134,22 +169,10 @@ function UpdateMeters()
 
 end
 
-function ActionSet(actionSet, ifLogic, input)
-
-	local actionSetName = actionSet
-
-	if actionSet == nil then
-		SKIN:Bang(defaultAction)
-	else
-		if ifLogic == true then
-			actionSetName = actionSet .. input
-			actionSet = SELF:GetOption(actionSet .. input)
-			else actionSet = SELF:GetOption(actionSet) end
-		if actionSet == '' then LogHelper('ActionSet \'' .. actionSetName .. '\' is empty or missing', 'Warning') end
-		LogHelper(actionSetName .. '=' .. actionSet, 'Debug')
-		SKIN:Bang(actionSet)
-	end
-
+function table.length(T)
+    local count = 0
+    for _ in pairs(T) do count = count + 1 end
+    return count
 end
 
 -- --------------------------------------------------------------------------------

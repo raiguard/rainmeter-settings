@@ -14,7 +14,7 @@ colorBg=15,15,15
 colorInputBg=40,40,40
 colorMain=240,240,240
 colorDim=150,150,150
-colorAccent=138,210,250
+colorAccent=137,190,250
 colorButtonPress=200,70,70
 ; File paths
 skinSettingsPath=#@#SkinSettings.inc
@@ -27,7 +27,7 @@ SolidColor=#colorBg#
 X=#bgOffset#
 Y=#bgOffset#
 W=#bgWidth#
-H=([MeterBackgroundHeight:Y] - (#bgOffset# * 2))
+H=([BackgroundHeight:Y] - (#bgOffset# * 2))
 DynamicVariables=1
 Group=Background
 
