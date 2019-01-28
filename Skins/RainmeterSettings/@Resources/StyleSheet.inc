@@ -90,3 +90,33 @@ W=(#contentWidth# - 4)
 ClipString=1
 DynamicVariables=1
 Group=Settings
+
+[StyleStringPivotValue]
+X=40R
+Y=r
+; StringCase=Upper
+StringAlign=Center
+FontWeight=600
+FontColor=#colorDim#
+DynamicVariables=1
+Group=Settings
+
+[StylePivotRightButton]
+FontFace=ElegantIcons
+FontSize=12
+FontColor=#colorAccent#
+Y=1r
+Text=[\x0045]
+MouseOverAction=[!SetOption #CURRENTSECTION# FontColor "#colorButtonPress#"][!UpdateMeter #CURRENTSECTION#][!Redraw]
+MouseLeaveAction=[!SetOption #CURRENTSECTION# FontColor "#colorAccent#"][!UpdateMeter #CURRENTSECTION#][!Redraw]
+Antialias=1
+
+[StylePivotLeftButton]
+FontFace=ElegantIcons
+FontSize=12
+FontColor=#colorAccent#
+Y=r
+Text=[\x0044]
+MouseOverAction=[!SetOption #CURRENTSECTION# FontColor "#colorButtonPress#"][!UpdateMeter #CURRENTSECTION#][!Redraw]
+MouseLeaveAction=[!SetOption #CURRENTSECTION# FontColor "#colorAccent#"][!UpdateMeter #CURRENTSECTION#][!Redraw]
+Antialias=1

@@ -1,6 +1,6 @@
 [Variables]
 toggle1=1
-toggle2=1
+toggle2=0
 tempUnits=F
 
 radio1=Foo
@@ -9,3 +9,5 @@ customText=auto
 
 switchDemo1=value1
 switchDemo2=false
+
+pivotTest=foo
