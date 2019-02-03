@@ -10,4 +10,4 @@ customText=auto
 switchDemo1=value1
 switchDemo2=false
 
-pivotTest=foo
+pivotTest=lorem
