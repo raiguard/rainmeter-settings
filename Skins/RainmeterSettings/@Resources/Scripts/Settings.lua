@@ -27,18 +27,16 @@
 -- --------------------------------------------------------------------------------
 -- Documentation: https://github.com/raiguard/rainmeter-settings/blob/master/README.md
 
-debug = false
+debug = true
 rainRgbInfo = {}
+assets = {}
 
 function Initialize()
 
 	meterUpdateGroup = SELF:GetOption('MeterUpdateGroup', 'Settings')
-	settingsPath = SELF:GetOption('SettingsPath', SKIN:GetVariable('CURRENTPATH'))
-	configPath = SELF:GetOption('ConfigPath', SKIN:GetVariable('CURRENTCONFIGPATH'))
-	toggleOn = SELF:GetOption('ToggleOn')
-	toggleOff = SELF:GetOption('ToggleOff')
-	radioOn = SELF:GetOption('RadioOn')
-	radioOff = SELF:GetOption('RadioOff')
+	settingsPath = SELF:GetOption('SettingsPath', SKIN:GetVariable('CURRENTPATH') .. SKIN:GetVariable('CURRENTFILE'))
+	configPath = SELF:GetOption('ConfigPath', SKIN:GetVariable('CURRENTCONFIG'))
+	assets = loadstring('return ' .. SELF:GetOption('Assets'))()
 	defaultAction = SELF:GetOption('DefaultAction')
 	measureRainRgb=SELF:GetOption('MeasureRainRgb', 'MeasureRainRgb')
 
@@ -88,6 +86,7 @@ function Pivot(variable, data, direction, actionSet, ifLogic, oSettingsPath, oCo
 	local lSettingsPath = oSettingsPath or settingsPath
 	local lConfigPath = oConfigPath or configPath
 
+	data = loadstring('return ' .. SELF:GetOption(data))()
 	local tableLength = table.length(data)
 	local index = table.find(data, SKIN:GetVariable(variable))
 	
@@ -170,22 +169,10 @@ function ActionSet(actionSet, ifLogic, input)
 
 end
 
--- returns the 'toggleOn' or 'toggleOff' parameters depending on the state of the
--- given variable
-function GetIcon(value, onState, offState)
+function GetIcon(type, ref, onState)
 
-	if offState == nil then
-		if onState == nil then
-			if value == 1 then return toggleOn
-				else return toggleOff end
-		else
-			if value == onState then return radioOn
-				else return radioOff end
-		end
-	else
-		if value == onState then return toggleOn
-			else return toggleOff end
-	end
+	local var = SKIN:GetVariable(ref)
+	return (var and assets[type]) and (var == onState and assets[type][1] or assets[type][2]) or RmLog('Variable reference or icon type are invalid!', 'Error')
 
 end
 
@@ -212,7 +199,9 @@ function RmLog(message, type)
 	if type == nil then type = 'Debug' end
 
 	if debug == true then SKIN:Bang("!Log", message, type)
-    elseif type ~= 'Debug' then SKIN:Bang("!Log", message, type) end
+	elseif type ~= 'Debug' then SKIN:Bang("!Log", message, type) end
+	
+	return 0
 
 end
 
