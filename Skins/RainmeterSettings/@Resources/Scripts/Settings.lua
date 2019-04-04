@@ -28,8 +28,6 @@
 -- Documentation: https://github.com/raiguard/rainmeter-settings/blob/master/README.md
 
 debug = true
-rainRgbInfo = {}
-assets = {}
 
 function Initialize()
 
@@ -38,7 +36,8 @@ function Initialize()
 	configPath = SELF:GetOption('ConfigPath', SKIN:GetVariable('CURRENTCONFIG'))
 	assets = loadstring('return ' .. SELF:GetOption('Assets'))()
 	defaultAction = SELF:GetOption('DefaultAction')
-	measureRainRgb=SELF:GetOption('MeasureRainRgb', 'MeasureRainRgb')
+	measureRainRgb=SELF:GetOption('MeasureRainRgb', 'MeasureSettingsRainRgb')
+	measureInputText=SELF:GetOption('MeasureInputText', 'MeasureSettingsInputText')
 
 end
 
@@ -68,15 +67,19 @@ end
 
 -- sets the specified variable to the given input. For use with radio buttons
 -- and input boxes.
-function Set(variable, input, actionSet, ifLogic, oSettingsPath, oConfigPath)
+function Set(variable, input, actionSet, ifLogic, oSettingsPath, oConfigPath, ignoreBlank)
 
 	local lSettingsPath = oSettingsPath or settingsPath
 	local lConfigPath = oConfigPath or configPath
-
-	SetVariable(variable, input, lSettingsPath, lConfigPath)
-	RmLog(variable .. '=' .. input, 'Debug')	
-	UpdateMeters()
-	ActionSet(actionSet, ifLogic, input)
+	
+	if input == '' and ignoreBlank == true then
+		return 0
+	else
+		SetVariable(variable, input, lSettingsPath, lConfigPath)
+		RmLog(variable .. '=' .. input, 'Debug')	
+		UpdateMeters()
+		ActionSet(actionSet, ifLogic, input)
+	end
 
 end
 
@@ -110,46 +113,53 @@ function RainRgb(variable, actionSet, ifLogic, oSettingsPath, oConfigPath)
 	local lConfigPath = oConfigPath or configPath
 
 	SKIN:Bang('!SetOption', measureRainRgb, 'Parameter', '\"VarName=' .. variable .. '\" \"FileName=' .. lSettingsPath .. '\" \"RefreshConfig=-1\"')
+	SKIN:Bang('!SetOption', measureRainRgb, 'FinishAction', '[!CommandMeasure '.. SELF:GetName() .. ' \"Set(\'' .. variable .. '\', \'[' .. measureRainRgb .. ']\', ' .. (actionSet and ('\'' .. actionSet .. '\'') or 'nil') .. ', ' .. (ifLogic and ('\'' .. ifLogic .. '\'') or 'nil') .. ', \'' .. string.gsub(lSettingsPath, '\\', '\\\\') .. '\', \'' .. string.gsub(lConfigPath, '\\', '\\\\') .. '\', true)\"]')
+	-- RmLog('[!CommandMeasure '.. SELF:GetName() .. ' \"Set(\'' .. variable .. '\', \'[*' .. measureRainRgb .. '*]\', ' .. (actionSet and ('\'' .. actionSet .. '\'') or 'nil') .. ', ' .. (ifLogic and ('\'' .. ifLogic .. '\'') or 'nil') .. ', \'' .. lSettingsPath .. '\', \'' .. lConfigPath .. '\')\"]')
+
 	SKIN:Bang('!UpdateMeasure', measureRainRgb)
 	SKIN:Bang('!CommandMeasure', measureRainRgb, 'Run')
 
-	rainRgbInfo = { variable, actionSet, ifLogic or 'nil', lSettingsPath, lConfigPath }
-
 end
 
-function FinishRainRgb(rainRgbOutput)
-
-	if rainRgbOutput ~= '' then Set(rainRgbInfo[1], rainRgbOutput, rainRgbInfo[2], rainRgbInfo[3], rainRgbInfo[4], rainRgbInfo[5]) end
-
-end
-
-function InputText(variable, meterName, defaultValue, actionSet, ifLogic, oSettingsPath, oConfigPath)
-
-	
-
-end
-
-function Switch(data, actionSet, ifLogic, oSettingsPath, oConfigPath)
+function InputText(data, variable, actionSet, ifLogic, oSettingsPath, oConfigPath)
 
 	local lSettingsPath = oSettingsPath or settingsPath
 	local lConfigPath = oConfigPath or configPath
 
-	for k,v in pairs(data) do
-		local cValue = SKIN:GetVariable(k)
-		if type(v) == 'table' then
-			for k1, v1 in pairs(v) do
-				if v1 == cValue then
-					RmLog(k .. ': this is it!')
-				else
-					RmLog(k .. ': this is definitely not it!')
-				end
-			end
-		else
-			v = tostring(v)
-		end
+	data = type(data) == 'string' and loadstring('return ' .. SELF:GetOption(data) or nil)() or data
+
+	if data and SKIN:GetVariable(variable) then
+		SKIN:Bang('!SetOption', measureInputText, 'Command1', '[!SetVariable _inputTextEscape \"$UserInput$\"][!CommandMeasure '.. SELF:GetName() .. ' \"Set(\'' .. variable .. '\', \'[' .. measureInputText .. ']\', ' .. (actionSet and ('\'' .. actionSet .. '\'') or 'nil') .. ', ' .. (ifLogic and ('\'' .. ifLogic .. '\'') or 'nil') .. ', \'' .. string.gsub(lSettingsPath, '\\', '\\\\') .. '\', \'' .. string.gsub(lConfigPath, '\\', '\\\\') .. '\')\"] DefaultValue=\"#*' .. variable .. '*#\" X=[' .. data.meterName .. ':X] Y=[' .. data.meterName .. ':Y] W=[' .. data.meterName .. ':W] H=[' .. data.meterName .. ':H] InputLimit=11')
+		-- RmLog('[!SetVariable _inputTextEscape \"$UserInput$\"][!CommandMeasure '.. SELF:GetName() .. ' \"Set(\'' .. variable .. '\', \'[' .. measureInputText .. ']\', ' .. (actionSet and ('\'' .. actionSet .. '\'') or 'nil') .. ', ' .. (ifLogic and ('\'' .. ifLogic .. '\'') or 'nil') .. ', \'' .. string.gsub(lSettingsPath, '\\', '\\\\') .. '\', \'' .. string.gsub(lConfigPath, '\\', '\\\\') .. '\', true)\"] DefaultValue=#*' .. variable .. '*# X=[' .. data.meterName .. ':X] Y=[' .. data.meterName .. ':Y] W=[' .. data.meterName .. ':W] H=[' .. data.meterName .. ':H]')
+		SKIN:Bang('!UpdateMeasure', measureInputText)
+		SKIN:Bang('!CommandMeasure', measureInputText, 'Executebatch 1')
+	else
+		RmLog('Data table or variable name is invalid!', 'Error')
 	end
 
 end
+
+-- function Switch(data, actionSet, ifLogic, oSettingsPath, oConfigPath)
+
+-- 	local lSettingsPath = oSettingsPath or settingsPath
+-- 	local lConfigPath = oConfigPath or configPath
+
+-- 	for k,v in pairs(data) do
+-- 		local cValue = SKIN:GetVariable(k)
+-- 		if type(v) == 'table' then
+-- 			for k1, v1 in pairs(v) do
+-- 				if v1 == cValue then
+-- 					RmLog(k .. ': this is it!')
+-- 				else
+-- 					RmLog(k .. ': this is definitely not it!')
+-- 				end
+-- 			end
+-- 		else
+-- 			v = tostring(v)
+-- 		end
+-- 	end
+
+-- end
 
 function ActionSet(actionSet, ifLogic, input)
 
