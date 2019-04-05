@@ -4,11 +4,13 @@
 			"path": "."
 		},
 		{
-			"name": "google-material-design-icons-updated",
-			"path": "D:\\Caleb\\Development\\Rainmeter\\Utilities\\google-material-design-icons-updated"
+			"path": "C:\\Files\\Caleb\\Development\\Rainmeter\\Utils\\google-material-design-icons-updated"
 		},
 		{
-			"path": "D:\\Caleb\\Development\\Rainmeter\\Testbench\\Skins\\ColorPicker"
+			"path": "C:\\Files\\Caleb\\Development\\Rainmeter\\Testbench\\Skins\\ColorPicker"
+		},
+		{
+			"path": "C:\\Files\\Caleb\\Development\\Rainmeter\\Projects\\ModernGadgets"
 		}
 	],
 	"settings": {}
