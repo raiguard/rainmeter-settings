@@ -13,6 +13,7 @@ function Update()
     -- Selected
     colors.selected_rgb = SKIN:ReplaceVariables(SKIN:GetVariable('selectedColor'))
     colors.selected_hue, colors.selected_sat, colors.selected_bri = RGBtoHSB(colors.selected_rgb)
+    colors.selected_hex = RGBtoHEX(string.match(colors.selected_rgb, '(%d+),(%d+),(%d+)'))
     -- Scrubbers
     colors.scrubber_hue_0 = string.format('%s,%s,%s', HSBtoRGB((0/6), colors.selected_sat, colors.selected_bri))
     colors.scrubber_hue_60 = string.format('%s,%s,%s', HSBtoRGB((1/6), colors.selected_sat, colors.selected_bri))
