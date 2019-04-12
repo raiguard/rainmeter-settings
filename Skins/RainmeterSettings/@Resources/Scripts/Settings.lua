@@ -88,8 +88,7 @@ function Pivot(variable, data, direction, actionSet, ifLogic, oSettingsPath, oCo
 	local lConfigPath = oConfigPath or configPath
 
 	data = type(data) == 'string' and loadstring('return ' .. SELF:GetOption(data) or nil)() or data
-
-	data = loadstring('return ' .. SELF:GetOption(data))()
+	
 	local tableLength = table.length(data)
 	local index = table.find(data, SKIN:GetVariable(variable))
 	
