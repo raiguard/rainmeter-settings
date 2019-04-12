@@ -5,7 +5,7 @@
 -- --------------------------------------------------------------------------------
 -- MIT License
 
--- Copyright (c) 2018 Caleb Heuer
+-- Copyright (c) 2019 Caleb Heuer
 
 -- Permission is hereby granted, free of charge, to any person obtaining a copy
 -- of this software and associated documentation files (the "Software"), to deal
@@ -45,7 +45,7 @@ end
 
 function Update() end
 
--- oggles the specified variable between the two given states
+-- toggles the specified variable between the two given states
 function Toggle(variable, onState, offState, actionSet, ifLogic, oSettingsPath, oConfigPath)
 
 	local value = SKIN:GetVariable(variable)
@@ -106,6 +106,7 @@ function Pivot(variable, data, direction, actionSet, ifLogic, oSettingsPath, oCo
 
 end
 
+-- invokes ColorPickerPlus; after color is selected, the Set() function is used with the given parameters
 function PickColor(variable, actionSet, ifLogic, oSettingsPath, oConfigPath)
 
 	local lSettingsPath = oSettingsPath or settingsPath
@@ -118,6 +119,7 @@ function PickColor(variable, actionSet, ifLogic, oSettingsPath, oConfigPath)
 
 end
 
+-- invokes a text box; after text is entered, the Set() function is used with the given parameters
 function InputText(data, variable, actionSet, ifLogic, oSettingsPath, oConfigPath)
 
 	local lSettingsPath = oSettingsPath or settingsPath
