@@ -36,8 +36,10 @@ function Initialize()
 	configPath = SELF:GetOption('ConfigPath', SKIN:GetVariable('CURRENTCONFIG'))
 	assets = loadstring('return ' .. SELF:GetOption('Assets'))()
 	defaultAction = SELF:GetOption('DefaultAction')
-	measureRainRgb=SELF:GetOption('MeasureRainRgb', 'MeasureSettingsRainRgb')
-	measureInputText=SELF:GetOption('MeasureInputText', 'MeasureSettingsInputText')
+	measureRainRgb = SELF:GetOption('MeasureRainRgb', 'MeasureSettingsRainRgb')
+	measureInputText = SELF:GetOption('MeasureInputText', 'MeasureSettingsInputText')
+	colorPickerConfig = SELF:GetOption('ColorPickerConfig')
+	colorPickerPath = SKIN:GetVariable('SKINSPATH') .. colorPickerConfig .. '\\ColorPickerPlus.ini'
 
 end
 
@@ -72,14 +74,10 @@ function Set(variable, input, actionSet, ifLogic, oSettingsPath, oConfigPath, ig
 	local lSettingsPath = oSettingsPath or settingsPath
 	local lConfigPath = oConfigPath or configPath
 	
-	if input == '' and ignoreBlank == true then
-		return 0
-	else
-		SetVariable(variable, input, lSettingsPath, lConfigPath)
-		RmLog(variable .. '=' .. input, 'Debug')	
-		UpdateMeters()
-		ActionSet(actionSet, ifLogic, input)
-	end
+	SetVariable(variable, input, lSettingsPath, lConfigPath)
+	RmLog(variable .. '=' .. input, 'Debug')	
+	UpdateMeters()
+	ActionSet(actionSet, ifLogic, input)
 
 end
 
@@ -88,6 +86,8 @@ function Pivot(variable, data, direction, actionSet, ifLogic, oSettingsPath, oCo
 
 	local lSettingsPath = oSettingsPath or settingsPath
 	local lConfigPath = oConfigPath or configPath
+
+	data = type(data) == 'string' and loadstring('return ' .. SELF:GetOption(data) or nil)() or data
 
 	data = loadstring('return ' .. SELF:GetOption(data))()
 	local tableLength = table.length(data)
@@ -107,17 +107,15 @@ function Pivot(variable, data, direction, actionSet, ifLogic, oSettingsPath, oCo
 
 end
 
-function RainRgb(variable, actionSet, ifLogic, oSettingsPath, oConfigPath)
+function PickColor(variable, actionSet, ifLogic, oSettingsPath, oConfigPath)
 
 	local lSettingsPath = oSettingsPath or settingsPath
 	local lConfigPath = oConfigPath or configPath
 
-	SKIN:Bang('!SetOption', measureRainRgb, 'Parameter', '\"VarName=' .. variable .. '\" \"FileName=' .. lSettingsPath .. '\" \"RefreshConfig=-1\"')
-	SKIN:Bang('!SetOption', measureRainRgb, 'FinishAction', '[!CommandMeasure '.. SELF:GetName() .. ' \"Set(\'' .. variable .. '\', \'[' .. measureRainRgb .. ']\', ' .. (actionSet and ('\'' .. actionSet .. '\'') or 'nil') .. ', ' .. (ifLogic and ('\'' .. ifLogic .. '\'') or 'nil') .. ', \'' .. string.gsub(lSettingsPath, '\\', '\\\\') .. '\', \'' .. string.gsub(lConfigPath, '\\', '\\\\') .. '\', true)\"]')
-	-- RmLog('[!CommandMeasure '.. SELF:GetName() .. ' \"Set(\'' .. variable .. '\', \'[*' .. measureRainRgb .. '*]\', ' .. (actionSet and ('\'' .. actionSet .. '\'') or 'nil') .. ', ' .. (ifLogic and ('\'' .. ifLogic .. '\'') or 'nil') .. ', \'' .. lSettingsPath .. '\', \'' .. lConfigPath .. '\')\"]')
-
-	SKIN:Bang('!UpdateMeasure', measureRainRgb)
-	SKIN:Bang('!CommandMeasure', measureRainRgb, 'Run')
+	SKIN:Bang('!WriteKeyValue', 'Variables', 'baseColor', SKIN:GetVariable(variable), colorPickerPath)
+	SKIN:Bang('!ActivateConfig', colorPickerConfig)
+	SKIN:Bang('!SetVariable', 'finishAction', '[!CommandMeasure ' .. SELF:GetName() .. ' \"Set(\'' .. variable .. '\', \'[&MeasureScript:GetColor(\'cur_rgb\')]\', ' .. (actionSet and ('\'' .. actionSet .. '\'') or 'nil') .. ', ' .. (ifLogic and ('\'' .. ifLogic .. '\'') or 'nil') .. ', \'' .. string.gsub(lSettingsPath, '\\', '\\\\') .. '\', \'' .. string.gsub(lConfigPath, '\\', '\\\\') .. '\')\" \"' .. SKIN:GetVariable('CURRENTCONFIG') .. '\"][!DeactivateConfig]', colorPickerConfig)
+	SKIN:Bang('!UpdateMeter', 'MeterConfirmButton', colorPickerConfig)
 
 end
 
@@ -129,8 +127,8 @@ function InputText(data, variable, actionSet, ifLogic, oSettingsPath, oConfigPat
 	data = type(data) == 'string' and loadstring('return ' .. SELF:GetOption(data) or nil)() or data
 
 	if data and SKIN:GetVariable(variable) then
-		SKIN:Bang('!SetOption', measureInputText, 'Command1', '[!SetVariable _inputTextEscape \"$UserInput$\"][!CommandMeasure '.. SELF:GetName() .. ' \"Set(\'' .. variable .. '\', \'[' .. measureInputText .. ']\', ' .. (actionSet and ('\'' .. actionSet .. '\'') or 'nil') .. ', ' .. (ifLogic and ('\'' .. ifLogic .. '\'') or 'nil') .. ', \'' .. string.gsub(lSettingsPath, '\\', '\\\\') .. '\', \'' .. string.gsub(lConfigPath, '\\', '\\\\') .. '\')\"] DefaultValue=\"#*' .. variable .. '*#\" X=[' .. data.meterName .. ':X] Y=[' .. data.meterName .. ':Y] W=[' .. data.meterName .. ':W] H=[' .. data.meterName .. ':H] InputLimit=11')
-		-- RmLog('[!SetVariable _inputTextEscape \"$UserInput$\"][!CommandMeasure '.. SELF:GetName() .. ' \"Set(\'' .. variable .. '\', \'[' .. measureInputText .. ']\', ' .. (actionSet and ('\'' .. actionSet .. '\'') or 'nil') .. ', ' .. (ifLogic and ('\'' .. ifLogic .. '\'') or 'nil') .. ', \'' .. string.gsub(lSettingsPath, '\\', '\\\\') .. '\', \'' .. string.gsub(lConfigPath, '\\', '\\\\') .. '\', true)\"] DefaultValue=#*' .. variable .. '*# X=[' .. data.meterName .. ':X] Y=[' .. data.meterName .. ':Y] W=[' .. data.meterName .. ':W] H=[' .. data.meterName .. ':H]')
+		-- RmLog('[!SetVariable _inputTextEscape \"$UserInput$\"][!CommandMeasure '.. SELF:GetName() .. ' \"Set(\'' .. variable .. '\', \'[' .. measureInputText .. ']\', ' .. (actionSet and ('\'' .. actionSet .. '\'') or 'nil') .. ', ' .. (ifLogic and ('\'' .. ifLogic .. '\'') or 'nil') .. ', \'' .. string.gsub(lSettingsPath, '\\', '\\\\') .. '\', \'' .. string.gsub(lConfigPath, '\\', '\\\\') .. '\')\"] DefaultValue=\"#*' .. variable .. '*#\" X=\"[' .. data.meterName .. ':X] - ' .. (data.padding[1] or 0) .. '\" Y=\"[' .. data.meterName .. ':Y] - ' .. (data.padding[2] or 0) .. '\" W=\"[' .. data.meterName .. ':W] + ' .. (data.padding[1] or 0) + (data.padding[3] or 0) .. '\" H=\"[' .. data.meterName .. ':H] + ' .. (data.padding[2] or 0) + (data.padding[4] or 0) .. '\" InputLimit=' .. data.inputLimit or 0)
+		SKIN:Bang('!SetOption', measureInputText, 'Command1', '[!SetVariable _inputTextEscape \"$UserInput$\"][!CommandMeasure '.. SELF:GetName() .. ' \"Set(\'' .. variable .. '\', \'[' .. measureInputText .. ']\', ' .. (actionSet and ('\'' .. actionSet .. '\'') or 'nil') .. ', ' .. (ifLogic and ('\'' .. ifLogic .. '\'') or 'nil') .. ', \'' .. string.gsub(lSettingsPath, '\\', '\\\\') .. '\', \'' .. string.gsub(lConfigPath, '\\', '\\\\') .. '\')\"] DefaultValue=\"#*' .. variable .. '*#\" X=\"([' .. data.meterName .. ':X] - ' .. (data.padding[1] or 0) .. ')\" Y=\"([' .. data.meterName .. ':Y] - ' .. (data.padding[2] or 0) .. ')\" W=\"([' .. data.meterName .. ':W] + ' .. (data.padding[1] or 0) + (data.padding[3] or 0) .. ')\" H=\"([' .. data.meterName .. ':H] + ' .. (data.padding[2] or 0) + (data.padding[4] or 0) .. ')\" InputLimit=' .. data.inputLimit or 0)
 		SKIN:Bang('!UpdateMeasure', measureInputText)
 		SKIN:Bang('!CommandMeasure', measureInputText, 'Executebatch 1')
 	else
@@ -138,28 +136,6 @@ function InputText(data, variable, actionSet, ifLogic, oSettingsPath, oConfigPat
 	end
 
 end
-
--- function Switch(data, actionSet, ifLogic, oSettingsPath, oConfigPath)
-
--- 	local lSettingsPath = oSettingsPath or settingsPath
--- 	local lConfigPath = oConfigPath or configPath
-
--- 	for k,v in pairs(data) do
--- 		local cValue = SKIN:GetVariable(k)
--- 		if type(v) == 'table' then
--- 			for k1, v1 in pairs(v) do
--- 				if v1 == cValue then
--- 					RmLog(k .. ': this is it!')
--- 				else
--- 					RmLog(k .. ': this is definitely not it!')
--- 				end
--- 			end
--- 		else
--- 			v = tostring(v)
--- 		end
--- 	end
-
--- end
 
 function ActionSet(actionSet, ifLogic, input)
 
@@ -179,7 +155,7 @@ function ActionSet(actionSet, ifLogic, input)
 
 end
 
-function GetIcon(type, ref, onState)
+function GetAsset(type, ref, onState)
 
 	local var = SKIN:GetVariable(ref)
 	return (var and assets[type]) and (var == onState and assets[type][1] or assets[type][2]) or RmLog('Variable reference or icon type are invalid!', 'Error')
